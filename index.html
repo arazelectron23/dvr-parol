@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DVR Parol</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0b16">
+    <link rel="stylesheet" href="style.css?v=1.1">
+    <!-- FontAwesome ikonlar -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Başlıq -->
+        <header class="app-header">
+            <div class="header-title">
+                <i class="fa-solid fa-video"></i>
+                <h2>DVR / Ezviz</h2>
+            </div>
+            <button id="openModalBtn" class="btn-icon-top" title="Yeni DVR">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </header>
+
+        <!-- Axtarış Sətri -->
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="S/n və ya müştəri axtar...">
+        </div>
+
+        <!-- DVR Kartlarının Siyahısı (Telefon üçün cədvəl əvəzinə kartlar daha rahatdır) -->
+        <div class="dvr-list" id="dvrListContainer">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <span>Yüklənir...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yeni DVR Əlavə Etmə / Redaktə Modalı -->
+    <div id="dvrModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Yeni DVR Qeydiyyatı</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+          <form id="dvrForm">
+    <input type="hidden" id="dvrId">
+    
+    <!-- Seriya və ya Müştəri Adı Seçim Paneli -->
+    <div style="display: flex; gap: 10px; margin-bottom: 12px; background: #0b0b16; padding: 4px; border-radius: 8px; border: 1px solid #22223b;">
+        <label style="flex: 1; text-align: center; padding: 8px; font-size: 13px; color: #fff; cursor: pointer; border-radius: 6px; background: #1a1a2e; font-weight: 600;" id="typeSerialLbl">
+            <input type="radio" name="entryType" value="serial" checked style="display: none;"> Seriya Nömrəsi
+        </label>
+        <label style="flex: 1; text-align: center; padding: 8px; font-size: 13px; color: #8899a6; cursor: pointer; border-radius: 6px; background: transparent; font-weight: 600;" id="typeCustomerLbl">
+            <input type="radio" name="entryType" value="customer" style="display: none;"> Müştəri Adı
+        </label>
+    </div>
+
+   <div class="form-group">
+    <label id="inputTitleLabel">Seriya Nömrəsi (S/N)</label>
+    <textarea id="serialNumber" name="search" rows="1" required placeholder="Seriya nömrəsini daxil edin" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" style="resize: none; height: 42px; line-height: 20px;"></textarea>
+</div>
+
+<div class="form-group">
+    <label>Şifrə</label>
+    <textarea id="password" name="search" rows="1" placeholder="Adi şifrəni daxil edin" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" style="resize: none; height: 42px; line-height: 20px;"></textarea>
+</div>
+    
+    <div class="form-group">
+        <label>Naxış Kilidi</label>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="patternDisplay" readonly placeholder="Naxış çəkilməyib" style="flex: 1; background: #0b0b16; color: #3498db; font-weight: bold;">
+            <button type="button" id="openPatternModalBtn" title="Naxış çək" style="background: #2a2a40; border: 1px solid #3498db; color: #3498db; padding: 0 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-lock"></i> Naxış Seç</button>
+        </div>
+        <input type="hidden" id="patternValue">
+    </div>
+
+<!-- Naxış seçildikdən sonra burda görsənəcək və ya gizli saxlanılacaq -->
+<input type="hidden" id="patternValue">
+
+    <div class="form-group">
+        <label>Qeyd</label>
+        <textarea id="note" rows="2" placeholder="Əlavə məlumat..."></textarea>
+    </div>
+    <div class="form-actions">
+        <button type="button" class="btn btn-secondary close-modal">İmtina</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Yadda Saxla</button>
+    </div>
+</form>
+        </div>
+    </div>
+
+<!-- Detal Modalı -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>DVR Detalları</h3>
+            <span class="close-detail-btn">&times;</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 10px 0; color: #b0c4de; font-size: 14px;">
+            <!-- S/N və Şifrə Kartları -->
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+               <div style="display: flex; gap: 10px; width: 100%;">
+    <div style="flex: 1; background: #1a1a2e; border: 1px solid #2a2a40; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; min-width: 0;">
+        <div style="min-width: 0; overflow: hidden; flex: 1;">
+            <strong id="detailSerialTitle" style="font-size: 11px; color: #8899a6; display: block;">S/N:</strong>
+            <span id="detailSerial" style="color: #fff; font-size: 14px; display: inline-block; margin-top: 3px; word-break: break-all;"></span>
+        </div>
+        <button type="button" id="copySerialBtn" title="Kopyala" style="background: #2a2a40; border: none; color: #fff; width: 32px; height: 32px; min-width: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 6px;"><i class="fa-solid fa-copy" style="font-size: 12px;"></i></button>
+    </div>
+    
+    <div style="flex: 1; background: #1a1a2e; border: 1px solid #2a2a40; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; min-width: 0;">
+        <div style="min-width: 0; overflow: hidden; flex: 1;">
+            <strong style="font-size: 11px; color: #8899a6; display: block;">Şifrə:</strong>
+            <!-- font-size 16px -> 14px edilib, word-break əlavə olunub -->
+            <span id="detailPassword" style="color: #fff; font-size: 14px; display: inline-block; margin-top: 3px; word-break: break-all; line-height: 1.2;"></span>
+        </div>
+        <button type="button" id="copyPasswordBtn" title="Kopyala" style="background: #2a2a40; border: none; color: #fff; width: 32px; height: 32px; min-width: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 6px;"><i class="fa-solid fa-copy" style="font-size: 12px;"></i></button>
+    </div>
+</div>
+
+               <!-- BU TƏKRAR BLOKU SİLİN: -->
+<div id="detailPatternBox" style="background: #1a1a2e; border: 1px solid #2a2a40; padding: 10px; border-radius: 12px; display: none; justify-content: space-between; align-items: center;">
+    <div style="overflow: hidden; flex: 1;">
+        <strong style="font-size: 11px; color: #8899a6; display: block;">Naxış Şifrəsi:</strong>
+        <span style="color: #3498db; font-size: 14px; font-weight: bold; display: inline-block; margin-top: 3px;">Təyin edilib</span>
+    </div>
+    <button type="button" id="viewPatternBtn" style="background: #3498db; border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-eye"></i> </button>
+</div>
+            </div>
+
+            <!-- Tarix Qutusu -->
+            <div style="background: #1a1a2e; border: 1px solid #2a2a40; padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <strong style="font-size: 11px; color: #8899a6; display: block;">Tarix:</strong>
+                <span id="detailDate" style="color: #fff; font-size: 14px;"></span>
+            </div>
+
+            <!-- Qeyd Kartı (Çərçivəli, əgər qeyd yoxdursa gizlənəcək) -->
+            <div id="detailNoteBox" style="background: #1a1a2e; border: 1px solid #2a2a40; padding: 10px; border-radius: 12px; display: none; flex-direction: column; gap: 4px;">
+                <strong style="font-size: 11px; color: #8899a6; display: block;">Qeyd:</strong>
+                <span id="detailNote" style="color: #fff; font-size: 14px; word-break: break-all;"></span>
+            </div>
+               </div>
+
+        <!-- Redaktə və Sil düymələri -->
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button type="button" id="detailEditBtn" style="flex: 1; background-color: #f39c12; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fa-solid fa-pen"></i> Redaktə</button>
+            <button type="button" id="detailDeleteBtn" style="flex: 1; background-color: #e74c3c; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fa-solid fa-trash"></i> Sil</button>
+        </div>
+    </div>
+</div>
+
+<!-- Naxış Çəkmək üçün Modal -->
+<div id="patternModal" class="modal">
+    <div class="modal-content" style="max-width: 320px; text-align: center;">
+        <div class="modal-header">
+            <h3>Naxış Kilidi Çəkin</h3>
+            <span class="close-pattern-btn" style="font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
+        </div>
+        
+        <div style="font-size: 13px; color: #8899a6; margin-bottom: 15px;" id="patternPreviewText">Naxış çəkilməyib</div>
+        
+        <!-- Naxış Çəkmə Matrisi -->
+        <div id="patternLockContainer" class="pattern-container" style="margin: 0 auto 15px auto;">
+            <div class="pattern-grid">
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+            <svg class="pattern-line-svg"></svg>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="button" id="clearPatternBtn" class="btn btn-secondary" style="flex: 1;">Təmizlə</button>
+            <button type="button" id="savePatternBtn" class="btn btn-primary" style="flex: 1;">Təsdiq et</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Naxışa Baxış Modalı -->
+<div id="viewPatternModal" class="modal">
+    <div class="modal-content" style="max-width: 320px; text-align: center;">
+        <div class="modal-header">
+            <h3>Naxış Şifrəsi</h3>
+            <span class="close-view-pattern-btn" style="font-size: 24px; color: #aaa; cursor: pointer;">&times;</span>
+        </div>
+        
+        <!-- Naxışın göstəriləcəyi konteyner -->
+        <div id="viewPatternContainer" class="pattern-container" style="margin: 15px auto; pointer-events: none;">
+            <div class="pattern-grid">
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+            <svg class="pattern-line-svg"></svg>
+        </div>
+
+        <button type="button" id="closeViewPatternModalBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">Bağla</button>
+    </div>
+</div>
+
+<!-- Xüsusi Təsdiq (Confirm) Modalı -->
+<div id="customConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a2e; border: 1px solid #2a2a40; padding: 24px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+        <p id="confirmMessage" style="color: #fff; font-size: 15px; margin-bottom: 20px; font-weight: 500; line-height: 1.4;"></p>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="confirmNoBtn" style="background: #2d2d44; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">Ləğv et</button>
+            <button id="confirmYesBtn" style="background: #e74c3c; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">Sil</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Firebase və əsas skriptlər -->
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="app.js?v=1.1"></script>
+    <script>
+        // Service Worker qeydiyyatı (PWA üçün)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW qeydə alındı:', reg.scope))
+                    .catch(err => console.log('SW xətası:', err));
+            });
+        }
+    </script>
+    <!-- Toast Bildiriş -->
+    <!-- Toast Bildiriş -->
+<!-- Ýokarky sag burçda çykjak Toast Bildiriş -->
+<div id="toastNotification" style="display: none; position: fixed; top: 20px; right: 20px; background: #e74c3c; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s ease;"></div>
+
+</body>
+</html>
